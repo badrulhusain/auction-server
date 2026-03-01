@@ -12,6 +12,12 @@ async function bootstrap() {
   // Enable Global Serialization (hides properties marked with @Exclude())
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  await app.listen(3000);
+  // Enable CORS for production so frontend clients can access the API
+  app.enableCors();
+
+  // Render dynamically assigns a PORT environment variable to web services
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

@@ -2,7 +2,8 @@
   "scripts": {
     "start": "node dist/main",
     "start:dev": "ts-node src/main.ts",
-    "build": "tsc"
+"build": "nest build",
+  "start:prod": "node dist/main"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

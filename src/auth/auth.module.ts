@@ -7,6 +7,7 @@ import { AdminLocalStrategy } from './strategies/admin-local.strategy';
 import { TeamLocalStrategy } from './strategies/team-local.strategy';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
+import { EmailModule } from '../infrastructure/email/email.module';
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from '../prisma/prisma.module';
             }),
             inject: [ConfigService],
         }),
+        EmailModule,
     ],
     providers: [AuthService, AdminLocalStrategy, TeamLocalStrategy, JwtAccessStrategy],
     controllers: [AuthController],

@@ -38,7 +38,10 @@ enum AuctionSessionStatus {
 }
 
 enum SessionRule {
-  DEFAULT
+  SEQUENTIAL
+  REVERSE
+  SNAKE
+  ROTATING
   CUSTOM
 }
 
@@ -75,21 +78,26 @@ enum DraftTurnStatus {
 // ----------------------------------------------------------------------------
 /// Represents admins logging into the application
 model Admin {
-  id            String @id @default(uuid())
-  name          String @db.VarChar
-  email         String @unique @db.VarChar
-  username      String @unique @db.VarChar
-  password_hash String @db.VarChar
+  id            String  @id @default(uuid())
+  name          String  @db.VarChar
+  email         String  @unique @db.VarChar
+  username      String  @unique @db.VarChar
+  password_hash String  @db.VarChar
+  team_id       String?
 
   // Relations
+  team     Team?     @relation(fields: [team_id], references: [id], onDelete: SetNull)
   auctions Auction[] @relation("AuctionCreator")
 
-  hashed_refresh_token String? @db.VarChar
+  hashed_refresh_token String?   @db.VarChar
+  reset_token          String?   @db.VarChar
+  reset_token_expiry   DateTime?
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
 
+  @@index([team_id])
   @@map("admins")
 }
 
@@ -127,11 +135,13 @@ model Team {
   // Relations
   auction       Auction    @relation(fields: [auction_id], references: [id], onDelete: Restrict)
 
+  admins                Admin[]
   bid_histories         BidHistory[]
   sales                 Sale[]
   team_budget_histories TeamBudgetHistory[]
-  draft_turn_orders     DraftTurnOrder[]
+  draft_turns           DraftTurn[]
   draft_picks           DraftPick[]
+  highest_bidded_items  AuctionItem[]       @relation("AuctionItemHighestTeam")
 
   hashed_refresh_token String? @db.VarChar
 
@@ -202,7 +212,7 @@ model AuctionSession {
   session_number         Int
   status                 AuctionSessionStatus @default(PENDING)
   // Draft auction specific
-  rule                   SessionRule?         @default(DEFAULT)
+  rule                   SessionRule?
   custom_rule            String?              @db.Text
   // English auction specific
   hike                   Decimal?             @db.Decimal(12, 2)
@@ -214,8 +224,9 @@ model AuctionSession {
   group                  Group                @relation(fields: [group_id], references: [id], onDelete: Restrict)
   auction_items          AuctionItem[]
   bid_histories          BidHistory[]
-  draft_turn_orders      DraftTurnOrder[]
+  draft_rounds           DraftRound[]
   draft_picks            DraftPick[]
+  team_budget_histories  TeamBudgetHistory[]
   created_at             DateTime             @default(now())
   updated_at             DateTime             @updatedAt
   deleted_at             DateTime?
@@ -231,28 +242,32 @@ model AuctionSession {
 // ----------------------------------------------------------------------------
 /// An instance of a student presented for bidding inside a specific auction session
 model AuctionItem {
-  id                 String            @id @default(uuid())
-  auction_session_id String
-  student_id         String
-  base_price         Decimal           @db.Decimal(12, 2)
-  item_order         Int
-  status             AuctionItemStatus @default(PENDING) // Merged duplicated status requirements
+  id                      String            @id @default(uuid())
+  auction_session_id      String
+  student_id              String
+  base_price              Decimal           @db.Decimal(12, 2)
+  item_order              Int
+  current_highest_bid     Decimal?          @db.Decimal(12, 2)
+  current_highest_team_id String?
+  status                  AuctionItemStatus @default(PENDING) // Merged duplicated status requirements
 
-  activated_at    DateTime?
-  deactivated_at  DateTime?
+  activated_at         DateTime?
+  deactivated_at       DateTime?
   // Relations
-  auction_session AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
-  student         Student        @relation(fields: [student_id], references: [id], onDelete: Restrict)
-  bid_histories   BidHistory[]
-  sales           Sale[]
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
-  deleted_at      DateTime?
+  auction_session      AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  student              Student        @relation(fields: [student_id], references: [id], onDelete: Restrict)
+  current_highest_team Team?          @relation("AuctionItemHighestTeam", fields: [current_highest_team_id], references: [id], onDelete: Restrict)
+  bid_histories        BidHistory[]
+  sales                Sale[]
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+  deleted_at           DateTime?
 
   @@unique([auction_session_id, item_order]) // Ensures no duplicate ordering natively
   @@unique([auction_session_id, student_id]) // Student appears only once per session
   @@index([auction_session_id])
   @@index([student_id])
+  @@index([current_highest_team_id])
   @@map("auction_items")
 }
 
@@ -304,46 +319,67 @@ model Sale {
 // ----------------------------------------------------------------------------
 /// Immutable ledger of total budget movements for a team
 model TeamBudgetHistory {
-  id               String          @id @default(uuid())
-  auction_id       String
-  team_id          String
-  previous_budget  Decimal         @db.Decimal(12, 2)
-  current_budget   Decimal         @db.Decimal(12, 2)
-  transaction_type TransactionType
-  notes            String?         @db.VarChar
+  id                 String          @id @default(uuid())
+  auction_id         String
+  team_id            String
+  auction_session_id String?
+  previous_budget    Decimal         @db.Decimal(12, 2)
+  current_budget     Decimal         @db.Decimal(12, 2)
+  transaction_type   TransactionType
+  notes              String?         @db.VarChar
   // Relations
-  auction          Auction         @relation(fields: [auction_id], references: [id], onDelete: Restrict)
-  team             Team            @relation(fields: [team_id], references: [id], onDelete: Restrict)
-  created_at       DateTime        @default(now())
+  auction            Auction         @relation(fields: [auction_id], references: [id], onDelete: Restrict)
+  team               Team            @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  auction_session    AuctionSession? @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  created_at         DateTime        @default(now())
 
   @@index([auction_id])
   @@index([team_id])
+  @@index([auction_session_id])
   @@map("team_budget_history")
 }
 
 // ----------------------------------------------------------------------------
 // DRAFT AUCTION SPECIFIC
 // ----------------------------------------------------------------------------
-/// Maps structural flow of picking orders (Draft Auction)
-model DraftTurnOrder {
-  id                  String          @id @default(uuid())
-  auction_session_id  String
-  team_id             String
-  round_number        Int
-  initial_turn_number Int
-  status              DraftTurnStatus @default(PENDING)
-  started_at          DateTime?
-  completed_at        DateTime?
-  // Relations
-  auction_session     AuctionSession  @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
-  team                Team            @relation(fields: [team_id], references: [id], onDelete: Restrict)
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
 
-  @@unique([auction_session_id, round_number, initial_turn_number]) // Enforces standard layout constraints
+model DraftRound {
+  id                 String         @id @default(uuid())
+  auction_session_id String
+  round_index        Int
+  started_at         DateTime?
+  completed_at       DateTime?
+  // Relations
+  auction_session    AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  draft_turns        DraftTurn[]
+  draft_picks        DraftPick[]
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @updatedAt
+
+  @@unique([auction_session_id, round_index])
   @@index([auction_session_id])
+  @@map("draft_rounds")
+}
+
+model DraftTurn {
+  id             String          @id @default(uuid())
+  draft_round_id String
+  team_id        String
+  turn_index     Int
+  status         DraftTurnStatus @default(PENDING)
+  started_at     DateTime?
+  completed_at   DateTime?
+  // Relations
+  draft_round    DraftRound      @relation(fields: [draft_round_id], references: [id], onDelete: Restrict)
+  team           Team            @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  draft_picks    DraftPick[]
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+
+  @@unique([draft_round_id, turn_index])
+  @@index([draft_round_id])
   @@index([team_id])
-  @@map("draft_turn_order")
+  @@map("draft_turns")
 }
 
 /// Acknowledged action taken by a team selecting a student (Draft Auction)
@@ -351,21 +387,23 @@ model DraftPick {
   id                 String         @id @default(uuid())
   auction_session_id String
   team_id            String
-  student_id         String
-  round_number       Int
-  turn_number        Int
+  student_id         String?
+  draft_round_id     String
+  draft_turn_id      String         @unique
   picked_at          DateTime       @default(now())
   // Relations
   auction_session    AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
   team               Team           @relation(fields: [team_id], references: [id], onDelete: Restrict)
-  student            Student        @relation(fields: [student_id], references: [id], onDelete: Restrict)
+  student            Student?       @relation(fields: [student_id], references: [id], onDelete: Restrict)
+  draft_round        DraftRound     @relation(fields: [draft_round_id], references: [id], onDelete: Restrict)
+  draft_turn         DraftTurn      @relation(fields: [draft_turn_id], references: [id], onDelete: Restrict)
   created_at         DateTime       @default(now())
   updated_at         DateTime       @updatedAt
 
   @@unique([auction_session_id, student_id]) // Student cannot be drafted twice in the same session
-  @@unique([auction_session_id, round_number, turn_number]) // Two entities cannot pick on the exact same registered turn natively
   @@index([auction_session_id])
   @@index([team_id])
   @@index([student_id])
+  @@index([draft_round_id])
   @@map("draft_picks")
 }

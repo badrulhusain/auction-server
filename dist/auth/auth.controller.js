@@ -18,6 +18,7 @@ const auth_service_1 = require("./auth.service");
 const admin_local_auth_guard_1 = require("./guards/admin-local-auth.guard");
 const team_local_auth_guard_1 = require("./guards/team-local-auth.guard");
 const register_dto_1 = require("./dto/register.dto");
+const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -42,6 +43,12 @@ let AuthController = class AuthController {
         await this.authService.logout(userId, 'ADMIN');
         res.clearCookie('admin_refresh_token');
         return { message: 'Logged out successfully' };
+    }
+    async forgotAdminPassword(dto) {
+        return this.authService.forgotAdminPassword(dto.email);
+    }
+    async resetAdminPassword(dto) {
+        return this.authService.resetAdminPassword(dto);
     }
     // --- TEAM ENDPOINTS ---
     async adminRegister(dto) {
@@ -87,6 +94,20 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "adminLogout", null);
+__decorate([
+    (0, common_1.Post)('admin/forgot-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "forgotAdminPassword", null);
+__decorate([
+    (0, common_1.Post)('admin/reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetAdminPassword", null);
 __decorate([
     (0, common_1.Post)('admin/register'),
     __param(0, (0, common_1.Body)()),

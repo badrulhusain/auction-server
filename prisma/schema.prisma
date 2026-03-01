@@ -1,0 +1,371 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuctionType {
+  ENGLISH
+  DRAFT
+}
+
+enum AuctionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum TeamStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AuctionSessionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionRule {
+  DEFAULT
+  CUSTOM
+}
+
+enum AuctionItemStatus {
+  PENDING
+  ACTIVE
+  SOLD
+  UNSOLD
+}
+
+enum BidStatus {
+  ACTIVE
+  OUTBID
+  WINNING
+  REJECTED
+}
+
+enum TransactionType {
+  INITIAL
+  INCREASE
+  DECREASE
+  ADJUSTMENT
+}
+
+enum DraftTurnStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  SKIPPED
+}
+
+// ----------------------------------------------------------------------------
+// MODELS
+// ----------------------------------------------------------------------------
+/// Represents admins logging into the application
+model Admin {
+  id            String @id @default(uuid())
+  name          String @db.VarChar
+  email         String @unique @db.VarChar
+  username      String @unique @db.VarChar
+  password_hash String @db.VarChar
+
+  // Relations
+  auctions Auction[] @relation("AuctionCreator")
+
+  hashed_refresh_token String? @db.VarChar
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@map("admins")
+}
+
+/// Represents an overarching Auction Event (e.g. "2026 Annual Draft" or "Charity English Auction")
+model Auction {
+  id                    String              @id @default(uuid())
+  created_by            String
+  name                  String              @db.VarChar
+  auction_type          AuctionType
+  status                AuctionStatus       @default(PENDING)
+  started_at            DateTime?
+  ended_at              DateTime?
+  // Relations
+  creator               Admin               @relation("AuctionCreator", fields: [created_by], references: [id], onDelete: Restrict)
+  teams                 Team[]
+  auction_sessions      AuctionSession[]
+  team_budget_histories TeamBudgetHistory[]
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
+  deleted_at            DateTime?
+
+  @@index([created_by])
+  @@map("auctions")
+}
+
+/// Represents the teams participating in the Auction
+model Team {
+  id            String     @id @default(uuid())
+  auction_id    String
+  name          String     @db.VarChar
+  username      String     @unique @db.VarChar
+  password_hash String     @db.VarChar
+  total_budget  Decimal    @db.Decimal(12, 2)
+  status        TeamStatus @default(ACTIVE)
+  // Relations
+  auction       Auction    @relation(fields: [auction_id], references: [id], onDelete: Restrict)
+
+  bid_histories         BidHistory[]
+  sales                 Sale[]
+  team_budget_histories TeamBudgetHistory[]
+  draft_turn_orders     DraftTurnOrder[]
+  draft_picks           DraftPick[]
+
+  hashed_refresh_token String? @db.VarChar
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([auction_id])
+  @@map("teams")
+}
+
+/// Core entity representing a Student (Candidate) available to be auctioned
+model Student {
+  id             String         @id @default(uuid())
+  name           String         @db.VarChar
+  reg_no         String         @unique @db.VarChar
+  is_active      Boolean        @default(true)
+  // Relations
+  student_groups StudentGroup[]
+  auction_items  AuctionItem[]
+  draft_picks    DraftPick[]
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  deleted_at     DateTime?
+
+  @@map("students")
+}
+
+/// Groups metadata (Tags/Categories) that a Student can belong to
+model Group {
+  id               String           @id @default(uuid())
+  key              String           @db.VarChar
+  value            String           @db.VarChar
+  // Relations
+  student_groups   StudentGroup[]
+  auction_sessions AuctionSession[]
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  deleted_at       DateTime?
+
+  @@unique([key, value])
+  @@map("groups")
+}
+
+/// Many-to-Many join table mapping Students to Groups
+model StudentGroup {
+  id         String   @id @default(uuid())
+  student_id String
+  group_id   String
+  // Relations
+  // Using Cascade delete here is logical for join tables
+  student    Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  group      Group    @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+
+  @@unique([student_id, group_id])
+  @@index([student_id])
+  @@index([group_id])
+  @@map("student_groups")
+}
+
+/// Sub-entity of Auction serving as distinct sub-rounds or grouping instances inside an Auction
+model AuctionSession {
+  id                     String               @id @default(uuid())
+  auction_id             String
+  group_id               String
+  name                   String               @db.VarChar
+  session_number         Int
+  status                 AuctionSessionStatus @default(PENDING)
+  // Draft auction specific
+  rule                   SessionRule?         @default(DEFAULT)
+  custom_rule            String?              @db.Text
+  // English auction specific
+  hike                   Decimal?             @db.Decimal(12, 2)
+  max_time_per_candidate Int? // stored in seconds
+  started_at             DateTime?
+  ended_at               DateTime?
+  // Relations
+  auction                Auction              @relation(fields: [auction_id], references: [id], onDelete: Restrict)
+  group                  Group                @relation(fields: [group_id], references: [id], onDelete: Restrict)
+  auction_items          AuctionItem[]
+  bid_histories          BidHistory[]
+  draft_turn_orders      DraftTurnOrder[]
+  draft_picks            DraftPick[]
+  created_at             DateTime             @default(now())
+  updated_at             DateTime             @updatedAt
+  deleted_at             DateTime?
+
+  @@unique([auction_id, session_number])
+  @@index([auction_id])
+  @@index([group_id])
+  @@map("auction_sessions")
+}
+
+// ----------------------------------------------------------------------------
+// ENGLISH AUCTION SPECIFIC
+// ----------------------------------------------------------------------------
+/// An instance of a student presented for bidding inside a specific auction session
+model AuctionItem {
+  id                 String            @id @default(uuid())
+  auction_session_id String
+  student_id         String
+  base_price         Decimal           @db.Decimal(12, 2)
+  item_order         Int
+  status             AuctionItemStatus @default(PENDING) // Merged duplicated status requirements
+
+  activated_at    DateTime?
+  deactivated_at  DateTime?
+  // Relations
+  auction_session AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  student         Student        @relation(fields: [student_id], references: [id], onDelete: Restrict)
+  bid_histories   BidHistory[]
+  sales           Sale[]
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  deleted_at      DateTime?
+
+  @@unique([auction_session_id, item_order]) // Ensures no duplicate ordering natively
+  @@unique([auction_session_id, student_id]) // Student appears only once per session
+  @@index([auction_session_id])
+  @@index([student_id])
+  @@map("auction_items")
+}
+
+/// The financial footprint of an item on the auction block (English Auction)
+model BidHistory {
+  id                 String         @id @default(uuid())
+  auction_item_id    String
+  auction_session_id String
+  team_id            String
+  bid_amount         Decimal        @db.Decimal(12, 2)
+  status             BidStatus      @default(ACTIVE)
+  // Relations
+  auction_item       AuctionItem    @relation(fields: [auction_item_id], references: [id], onDelete: Restrict)
+  auction_session    AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  team               Team           @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  sales              Sale[]         @relation("SaleWinningBid")
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @updatedAt
+
+  @@index([auction_item_id])
+  @@index([auction_session_id])
+  @@index([team_id])
+  @@map("bid_history")
+}
+
+/// Definitive resolution of a completed English Auction bid cycle
+model Sale {
+  id              String      @id @default(uuid())
+  auction_item_id String      @unique // 1-to-1 linkage, an item can only be sold once
+  winning_bid_id  String      @unique // 1-to-1 linkage, a bid can only be registered as a winning transaction once
+  team_id         String
+  final_price     Decimal     @db.Decimal(12, 2)
+  sold_at         DateTime    @default(now())
+  // Relations
+  auction_item    AuctionItem @relation(fields: [auction_item_id], references: [id], onDelete: Restrict)
+  winning_bid     BidHistory  @relation("SaleWinningBid", fields: [winning_bid_id], references: [id], onDelete: Restrict)
+  team            Team        @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  @@index([auction_item_id])
+  @@index([winning_bid_id])
+  @@index([team_id])
+  @@map("sales")
+}
+
+// ----------------------------------------------------------------------------
+// FINANCIAL AUDIT LOGS
+// ----------------------------------------------------------------------------
+/// Immutable ledger of total budget movements for a team
+model TeamBudgetHistory {
+  id               String          @id @default(uuid())
+  auction_id       String
+  team_id          String
+  previous_budget  Decimal         @db.Decimal(12, 2)
+  current_budget   Decimal         @db.Decimal(12, 2)
+  transaction_type TransactionType
+  notes            String?         @db.VarChar
+  // Relations
+  auction          Auction         @relation(fields: [auction_id], references: [id], onDelete: Restrict)
+  team             Team            @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  created_at       DateTime        @default(now())
+
+  @@index([auction_id])
+  @@index([team_id])
+  @@map("team_budget_history")
+}
+
+// ----------------------------------------------------------------------------
+// DRAFT AUCTION SPECIFIC
+// ----------------------------------------------------------------------------
+/// Maps structural flow of picking orders (Draft Auction)
+model DraftTurnOrder {
+  id                  String          @id @default(uuid())
+  auction_session_id  String
+  team_id             String
+  round_number        Int
+  initial_turn_number Int
+  status              DraftTurnStatus @default(PENDING)
+  started_at          DateTime?
+  completed_at        DateTime?
+  // Relations
+  auction_session     AuctionSession  @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  team                Team            @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+
+  @@unique([auction_session_id, round_number, initial_turn_number]) // Enforces standard layout constraints
+  @@index([auction_session_id])
+  @@index([team_id])
+  @@map("draft_turn_order")
+}
+
+/// Acknowledged action taken by a team selecting a student (Draft Auction)
+model DraftPick {
+  id                 String         @id @default(uuid())
+  auction_session_id String
+  team_id            String
+  student_id         String
+  round_number       Int
+  turn_number        Int
+  picked_at          DateTime       @default(now())
+  // Relations
+  auction_session    AuctionSession @relation(fields: [auction_session_id], references: [id], onDelete: Restrict)
+  team               Team           @relation(fields: [team_id], references: [id], onDelete: Restrict)
+  student            Student        @relation(fields: [student_id], references: [id], onDelete: Restrict)
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @updatedAt
+
+  @@unique([auction_session_id, student_id]) // Student cannot be drafted twice in the same session
+  @@unique([auction_session_id, round_number, turn_number]) // Two entities cannot pick on the exact same registered turn natively
+  @@index([auction_session_id])
+  @@index([team_id])
+  @@index([student_id])
+  @@map("draft_picks")
+}

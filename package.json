@@ -2,10 +2,11 @@
   "scripts": {
     "start": "node dist/main",
     "start:dev": "ts-node src/main.ts",
-"build": "nest build",
-  "start:prod": "node dist/main"
+    "build": "nest build",
+    "start:prod": "node dist/main"
   },
   "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.2",

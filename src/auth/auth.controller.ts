@@ -4,6 +4,7 @@ import { AdminLocalAuthGuard } from './guards/admin-local-auth.guard';
 import { TeamLocalAuthGuard } from './guards/team-local-auth.guard';
 import { Response } from 'express';
 import { RegisterAdminDto, RegisterTeamDto } from './dto/register.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,6 +38,16 @@ export class AuthController {
 
         res.clearCookie('admin_refresh_token');
         return { message: 'Logged out successfully' };
+    }
+
+    @Post('admin/forgot-password')
+    async forgotAdminPassword(@Body() dto: ForgotPasswordDto) {
+        return this.authService.forgotAdminPassword(dto.email);
+    }
+
+    @Post('admin/reset-password')
+    async resetAdminPassword(@Body() dto: ResetPasswordDto) {
+        return this.authService.resetAdminPassword(dto);
     }
 
     // --- TEAM ENDPOINTS ---

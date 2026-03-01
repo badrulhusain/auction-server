@@ -9,6 +9,7 @@ import { AuctionModule } from './auction/auction.module';
 import { TeamModule } from './team/team.module';
 import { GroupModule } from './group/group.module';
 import { StudentGroupModule } from './student-group/student-group.module';
+import { EmailModule } from './infrastructure/email/email.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { StudentGroupModule } from './student-group/student-group.module';
     AuctionModule,
     TeamModule,
     GroupModule,
-    StudentGroupModule
+    StudentGroupModule,
+    EmailModule
   ],
   controllers: [],
   providers: [],

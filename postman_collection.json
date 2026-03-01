@@ -1,13 +1,694 @@
 {
     "info": {
-        "_postman_id": "a1b2c3d4-e5f6-7890-1234-56789abcdef0",
-        "name": "Auction API - Groups and StudentGroups",
-        "description": "A collection to test the newly created Group and StudentGroup CRUD endpoints.",
+        "name": "BidSphere Auction API Complete",
+        "description": "Comprehensive Postman collection for all BidSphere Auction APIs.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
         {
-            "name": "Groups",
+            "name": "1. Auth",
+            "item": [
+                {
+                    "name": "Admin Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Super Admin\",\n    \"email\": \"admin@example.com\",\n    \"username\": \"superadmin\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/admin/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "admin",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/admin/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "admin",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/admin/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "admin",
+                                "logout"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin Check Email",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@example.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/admin/check-email",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "admin",
+                                "check-email"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@example.com\",\n    \"newPassword\": \"newpassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/admin/reset-password",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "admin",
+                                "reset-password"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Team Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"auction_id\": \"{{auctionId}}\",\n    \"name\": \"Team Alpha\",\n    \"username\": \"teamalpha\",\n    \"password\": \"password123\",\n    \"total_budget\": 1000000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/team/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "team",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Team Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"teamalpha\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/team/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "team",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Team Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/team/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "team",
+                                "logout"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Admins",
+            "item": [
+                {
+                    "name": "Create Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Sub Admin\",\n    \"email\": \"subadmin@example.com\",\n    \"username\": \"subadmin\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Admins",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Admin by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/{{adminId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "{{adminId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Admin",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Admin Name\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/{{adminId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "{{adminId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Admin",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/{{adminId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "{{adminId}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. Auctions",
+            "item": [
+                {
+                    "name": "Create Auction",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"created_by\": \"{{adminId}}\",\n    \"name\": \"Annual Draft 2026\",\n    \"auction_type\": \"ENGLISH\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auction",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Auctions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auction",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Auction by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auction/{{auctionId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction",
+                                "{{auctionId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Auction",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"ACTIVE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auction/{{auctionId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction",
+                                "{{auctionId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Auction",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auction/{{auctionId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction",
+                                "{{auctionId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Auction Session",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"group_id\": \"{{groupId}}\",\n    \"name\": \"Round 1\",\n    \"session_number\": 1,\n    \"hike\": 50,\n    \"max_time_per_candidate\": 60,\n    \"rule\": \"DEFAULT\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auction/{{auctionId}}/session",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction",
+                                "{{auctionId}}",
+                                "session"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Add Item to Session",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"student_id\": \"{{studentId}}\",\n    \"base_price\": 500,\n    \"item_order\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auction/session/{{sessionId}}/item",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction",
+                                "session",
+                                "{{sessionId}}",
+                                "item"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. Teams",
+            "item": [
+                {
+                    "name": "Create Team",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"auction_id\": \"{{auctionId}}\",\n    \"name\": \"Team Beta\",\n    \"username\": \"teambeta\",\n    \"password_hash\": \"password123\",\n    \"total_budget\": 2000000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/team",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "team"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Teams",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/team",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "team"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Team by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/team/{{teamId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "team",
+                                "{{teamId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Team",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"total_budget\": 2500000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/team/{{teamId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "team",
+                                "{{teamId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Team",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/team/{{teamId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "team",
+                                "{{teamId}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. Students",
+            "item": [
+                {
+                    "name": "Create Student",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"John Doe\",\n    \"reg_no\": \"REG2026-001\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/student",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Students",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Student by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/{{studentId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "{{studentId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Student",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"is_active\": false\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/student/{{studentId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "{{studentId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Student",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/student/{{studentId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "student",
+                                "{{studentId}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6. Groups",
             "item": [
                 {
                     "name": "Create Group",
@@ -21,7 +702,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\r\n    \"key\": \"Department\",\r\n    \"value\": \"Computer Science\"\r\n}"
+                            "raw": "{\n    \"key\": \"Department\",\n    \"value\": \"Computer Science\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/group",
@@ -32,8 +713,7 @@
                                 "group"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get All Groups",
@@ -49,8 +729,7 @@
                                 "group"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get Group by ID",
@@ -67,8 +746,7 @@
                                 "{{groupId}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Update Group",
@@ -82,7 +760,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\r\n    \"value\": \"Information Technology\"\r\n}"
+                            "raw": "{\n    \"value\": \"Information Technology\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/group/{{groupId}}",
@@ -94,8 +772,7 @@
                                 "{{groupId}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Delete Group",
@@ -112,13 +789,12 @@
                                 "{{groupId}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 }
             ]
         },
         {
-            "name": "Student Groups",
+            "name": "7. Student Groups",
             "item": [
                 {
                     "name": "Create StudentGroup (Assign Student to Group)",
@@ -132,7 +808,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\r\n    \"student_id\": \"{{studentId}}\",\r\n    \"group_id\": \"{{groupId}}\"\r\n}"
+                            "raw": "{\n    \"student_id\": \"{{studentId}}\",\n    \"group_id\": \"{{groupId}}\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/student-group",
@@ -143,35 +819,7 @@
                                 "student-group"
                             ]
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Create StudentGroup (Test Unique Constraint ERROR)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\r\n    \"student_id\": \"{{studentId}}\",\r\n    \"group_id\": \"{{anotherGroupId}}\"\r\n}"
-                        },
-                        "url": {
-                            "raw": "{{baseUrl}}/student-group",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "student-group"
-                            ]
-                        },
-                        "description": "If a student is already in a group, this should fail with a 409 Conflict."
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get All StudentGroups",
@@ -187,8 +835,7 @@
                                 "student-group"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get StudentGroup by ID",
@@ -205,8 +852,7 @@
                                 "{{studentGroupId}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Update StudentGroup",
@@ -220,7 +866,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\r\n    \"group_id\": \"{{anotherGroupId}}\"\r\n}"
+                            "raw": "{\n    \"group_id\": \"{{groupId}}\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/student-group/{{studentGroupId}}",
@@ -232,8 +878,7 @@
                                 "{{studentGroupId}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Delete StudentGroup",
@@ -250,8 +895,7 @@
                                 "{{studentGroupId}}"
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 }
             ]
         }
@@ -263,23 +907,38 @@
             "type": "string"
         },
         {
-            "key": "groupId",
-            "value": "REPLACE_WITH_ACTUAL_GROUP_ID",
+            "key": "adminId",
+            "value": "REPLACE_WITH_ADMIN_ID",
             "type": "string"
         },
         {
-            "key": "anotherGroupId",
-            "value": "REPLACE_WITH_ANOTHER_GROUP_ID",
+            "key": "auctionId",
+            "value": "REPLACE_WITH_AUCTION_ID",
+            "type": "string"
+        },
+        {
+            "key": "teamId",
+            "value": "REPLACE_WITH_TEAM_ID",
             "type": "string"
         },
         {
             "key": "studentId",
-            "value": "REPLACE_WITH_ACTUAL_STUDENT_ID",
+            "value": "REPLACE_WITH_STUDENT_ID",
+            "type": "string"
+        },
+        {
+            "key": "groupId",
+            "value": "REPLACE_WITH_GROUP_ID",
             "type": "string"
         },
         {
             "key": "studentGroupId",
-            "value": "REPLACE_WITH_ACTUAL_STUDENT_GROUP_ID",
+            "value": "REPLACE_WITH_STUDENT_GROUP_ID",
+            "type": "string"
+        },
+        {
+            "key": "sessionId",
+            "value": "REPLACE_WITH_SESSION_ID",
             "type": "string"
         }
     ]

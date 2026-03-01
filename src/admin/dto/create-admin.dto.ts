@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateAdminDto {
     @IsString()
@@ -15,4 +15,8 @@ export class CreateAdminDto {
     @IsString()
     @MinLength(8)
     password_hash!: string;
+
+    @IsOptional()
+    @IsUUID()
+    team_id?: string;
 }

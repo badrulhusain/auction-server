@@ -48,6 +48,8 @@ const bcrypt = __importStar(require("bcrypt"));
 const prisma_service_1 = require("../prisma/prisma.service");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
+const crypto = __importStar(require("crypto"));
+const nodemailer = __importStar(require("nodemailer"));
 let AuthService = class AuthService {
     constructor(prisma, jwtService, configService) {
         this.prisma = prisma;
@@ -196,6 +198,103 @@ let AuthService = class AuthService {
                 data: { hashed_refresh_token: null },
             });
         }
+    }
+    /**
+     * Handles the forgot password request.
+     */
+    async forgotAdminPassword(email) {
+        const admin = await this.prisma.admin.findUnique({
+            where: { email },
+        });
+        if (!admin) {
+            throw new common_1.NotFoundException('Account not registered');
+        }
+        // Generate a random token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        // Expiration time 1 hour from now
+        const tokenExpiry = new Date();
+        tokenExpiry.setHours(tokenExpiry.getHours() + 1);
+        await this.prisma.admin.update({
+            where: { id: admin.id },
+            data: {
+                reset_token: resetToken,
+                reset_token_expiry: tokenExpiry,
+            },
+        });
+        // Initialize Nodemailer. If no real SMTP config is found, use Ethereal for testing
+        let transporter;
+        const smtpHost = this.configService.get('SMTP_HOST');
+        if (smtpHost) {
+            transporter = nodemailer.createTransport({
+                host: smtpHost,
+                port: this.configService.get('SMTP_PORT') || 587,
+                secure: this.configService.get('SMTP_SECURE') || false,
+                auth: {
+                    user: this.configService.get('SMTP_USER'),
+                    pass: this.configService.get('SMTP_PASS'),
+                },
+            });
+        }
+        else {
+            // Mock email for local development using Ethereal
+            const testAccount = await nodemailer.createTestAccount();
+            transporter = nodemailer.createTransport({
+                host: 'smtp.ethereal.email',
+                port: 587,
+                secure: false, // true for 465, false for other ports
+                auth: {
+                    user: testAccount.user,
+                    pass: testAccount.pass,
+                },
+            });
+        }
+        const resetLink = `https://your-website.com/reset-password?token=${resetToken}`;
+        const info = await transporter.sendMail({
+            from: '"Admin Support" <support@your-website.com>',
+            to: email,
+            subject: 'Password Reset Request',
+            text: `Click this link to reset your password: ${resetLink}`,
+            html: `<p>Click this <a href="${resetLink}">link</a> to reset your password.</p>`,
+        });
+        // Useful for development to see the generated email link
+        if (!smtpHost) {
+            console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        }
+        return { message: 'Email sent successfully' };
+    }
+    /**
+     * Resets the admin's password.
+     */
+    async resetAdminPassword(dto) {
+        // We now expect 'token' instead of 'email' from the controller
+        const admin = await this.prisma.admin.findFirst({
+            where: {
+                reset_token: dto.token
+            },
+        });
+        if (!admin || !admin.reset_token_expiry) {
+            throw new common_1.BadRequestException('Invalid or expired password reset token');
+        }
+        // Check token expiration
+        if (admin.reset_token_expiry < new Date()) {
+            throw new common_1.BadRequestException('Invalid or expired password reset token');
+        }
+        if (admin.password_hash) {
+            const isMatch = await this.compareData(dto.newPassword, admin.password_hash);
+            if (isMatch) {
+                throw new common_1.BadRequestException('New password cannot be the same as your old password.');
+            }
+        }
+        const hashedPassword = await this.hashData(dto.newPassword);
+        await this.prisma.admin.update({
+            where: { id: admin.id },
+            data: {
+                password_hash: hashedPassword,
+                reset_token: null, // Clear the token
+                reset_token_expiry: null, // Clear the expiration
+            },
+        });
+        return { message: 'Password successfully changed' };
     }
 };
 exports.AuthService = AuthService;

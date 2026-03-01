@@ -33,4 +33,9 @@ __decorate([
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], CreateAdminDto.prototype, "password_hash", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateAdminDto.prototype, "team_id", void 0);
 //# sourceMappingURL=create-admin.dto.js.map

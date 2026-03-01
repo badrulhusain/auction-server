@@ -9,28 +9,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminEntity = void 0;
-const class_transformer_1 = require("class-transformer");
-class AdminEntity {
-    constructor(partial) {
-        Object.assign(this, partial);
-    }
+exports.ResetPasswordDto = exports.ForgotPasswordDto = void 0;
+const class_validator_1 = require("class-validator");
+class ForgotPasswordDto {
 }
-exports.AdminEntity = AdminEntity;
+exports.ForgotPasswordDto = ForgotPasswordDto;
 __decorate([
-    (0, class_transformer_1.Exclude)(),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], AdminEntity.prototype, "password_hash", void 0);
+], ForgotPasswordDto.prototype, "email", void 0);
+class ResetPasswordDto {
+}
+exports.ResetPasswordDto = ResetPasswordDto;
 __decorate([
-    (0, class_transformer_1.Exclude)(),
-    __metadata("design:type", Object)
-], AdminEntity.prototype, "hashed_refresh_token", void 0);
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "token", void 0);
 __decorate([
-    (0, class_transformer_1.Exclude)(),
-    __metadata("design:type", Object)
-], AdminEntity.prototype, "reset_token", void 0);
-__decorate([
-    (0, class_transformer_1.Exclude)(),
-    __metadata("design:type", Object)
-], AdminEntity.prototype, "reset_token_expiry", void 0);
-//# sourceMappingURL=admin.entity.js.map
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(6),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "newPassword", void 0);
+//# sourceMappingURL=forgot-password.dto.js.map

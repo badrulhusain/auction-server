@@ -116,7 +116,7 @@ export class AuctionService {
         // Apply business rule: Draft auctions cannot have SOLD/UNSOLD statuses
         if (session.auction.auction_type === 'DRAFT') {
             if (createItemDto.status === 'SOLD' || createItemDto.status === 'UNSOLD') {
-                throw new BadRequestException('Draft auctions cannot possess items with SOLD or UNSOLD status. Drafts solely define DraftTurnOrders.');
+                throw new BadRequestException('Draft auctions cannot possess items with SOLD or UNSOLD status. Drafts solely define DraftRounds and DraftTurns.');
             }
         }
 

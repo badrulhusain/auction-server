@@ -115,6 +115,7 @@ model Auction {
   teams                 Team[]
   auction_sessions      AuctionSession[]
   students              Student[]
+  groups                Group[]
   team_budget_histories TeamBudgetHistory[]
   created_at            DateTime            @default(now())
   updated_at            DateTime            @updatedAt
@@ -178,16 +179,19 @@ model Student {
 /// Groups metadata (Tags/Categories) that a Student can belong to
 model Group {
   id               String           @id @default(uuid())
+  auction_id       String
   key              String           @db.VarChar
   value            String           @db.VarChar
   // Relations
+  auction          Auction          @relation(fields: [auction_id], references: [id], onDelete: Cascade)
   student_groups   StudentGroup[]
   auction_sessions AuctionSession[]
   created_at       DateTime         @default(now())
   updated_at       DateTime         @updatedAt
   deleted_at       DateTime?
 
-  @@unique([key, value])
+  @@unique([auction_id, key, value])
+  @@index([auction_id])
   @@map("groups")
 }
 
@@ -222,6 +226,7 @@ model AuctionSession {
   // English auction specific
   hike                   Decimal?             @db.Decimal(12, 2)
   max_time_per_candidate Int? // stored in seconds
+  base_team_order        Json?
   started_at             DateTime?
   ended_at               DateTime?
   // Relations

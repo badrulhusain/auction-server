@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
@@ -13,8 +13,8 @@ export class GroupController {
     }
 
     @Get()
-    findAll() {
-        return this.groupService.findAll();
+    findAll(@Headers('x-auction-id') auctionId?: string) {
+        return this.groupService.findAll(auctionId);
     }
 
     @Get(':id')

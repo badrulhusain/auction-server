@@ -26,8 +26,10 @@ export class GroupService {
         }
     }
 
-    async findAll() {
-        return this.prisma.group.findMany();
+    async findAll(auctionId?: string) {
+        return this.prisma.group.findMany({
+            where: auctionId ? { auction_id: auctionId } : undefined
+        });
     }
 
     async findOne(id: string) {

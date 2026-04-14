@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { CreateAuctionSessionDto } from './dto/create-auction-session.dto';
+import { UpdateAuctionSessionDto } from './dto/update-auction-session.dto';
 import { CreateAuctionItemDto } from './dto/create-auction-item.dto';
 
 @Injectable()
@@ -93,6 +94,39 @@ export class AuctionService {
                 ...createSessionDto,
                 auction_id: auctionId
             },
+        });
+    }
+
+    async findSessionsByAuctionId(auctionId: string) {
+        const auctionExists = await this.prisma.auction.findUnique({ where: { id: auctionId } });
+        if (!auctionExists) {
+            throw new NotFoundException(`Auction with ID ${auctionId} not found`);
+        }
+        return this.prisma.auctionSession.findMany({
+            where: { auction_id: auctionId },
+            include: { auction_items: true }
+        });
+    }
+
+    async findSessionById(sessionId: string) {
+        const session = await this.prisma.auctionSession.findUnique({
+            where: { id: sessionId },
+            include: { auction_items: true },
+        });
+        if (!session) {
+            throw new NotFoundException(`Session with ID ${sessionId} not found`);
+        }
+        return session;
+    }
+
+    async updateSession(sessionId: string, updateDto: UpdateAuctionSessionDto) {
+        const session = await this.prisma.auctionSession.findUnique({ where: { id: sessionId } });
+        if (!session) {
+            throw new NotFoundException(`Session with ID ${sessionId} not found`);
+        }
+        return this.prisma.auctionSession.update({
+            where: { id: sessionId },
+            data: updateDto,
         });
     }
 

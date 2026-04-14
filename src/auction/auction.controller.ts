@@ -4,6 +4,7 @@ import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { CreateAuctionSessionDto } from './dto/create-auction-session.dto';
 import { CreateAuctionItemDto } from './dto/create-auction-item.dto';
+import { UpdateAuctionSessionDto } from './dto/update-auction-session.dto';
 import { AuctionEntity } from './entities/auction.entity';
 
 @Controller('auction')
@@ -46,6 +47,24 @@ export class AuctionController {
         @Body() createSessionDto: CreateAuctionSessionDto
     ) {
         return this.auctionService.createSession(id, createSessionDto);
+    }
+
+    @Get(':id/session')
+    async findSessions(@Param('id') id: string) {
+        return this.auctionService.findSessionsByAuctionId(id);
+    }
+
+    @Get('session/:sessionId')
+    async findSession(@Param('sessionId') sessionId: string) {
+        return this.auctionService.findSessionById(sessionId);
+    }
+
+    @Patch('session/:sessionId')
+    async updateSession(
+        @Param('sessionId') sessionId: string,
+        @Body() updateDto: UpdateAuctionSessionDto,
+    ) {
+        return this.auctionService.updateSession(sessionId, updateDto);
     }
 
     @Post('session/:sessionId/item')

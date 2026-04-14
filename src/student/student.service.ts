@@ -9,19 +9,30 @@ export class StudentService {
 
   async create(createStudentDto: CreateStudentDto) {
     const existingStudent = await this.prisma.student.findUnique({
-      where: { reg_no: createStudentDto.reg_no }
+      where: { 
+        auction_id_reg_no: { 
+          auction_id: createStudentDto.auction_id!, 
+          reg_no: createStudentDto.reg_no 
+        } 
+      }
     });
+
     if (existingStudent) {
-      throw new ConflictException(`Student with registration number ${createStudentDto.reg_no} already exists`);
+      throw new ConflictException(`Student with registration number ${createStudentDto.reg_no} already exists in this auction`);
     }
 
     return this.prisma.student.create({
-      data: createStudentDto,
+      data: {
+        ...createStudentDto,
+        auction_id: createStudentDto.auction_id!
+      },
     });
   }
 
-  async findAll() {
-    return this.prisma.student.findMany();
+  async findAll(auctionId: string) {
+    return this.prisma.student.findMany({
+      where: { auction_id: auctionId }
+    });
   }
 
   async findOne(id: string) {
@@ -36,12 +47,17 @@ export class StudentService {
       throw new NotFoundException(`Student with ID ${id} not found`);
     }
 
-    if (updateStudentDto.reg_no) {
+    if (updateStudentDto.reg_no && updateStudentDto.auction_id) {
       const duplicate = await this.prisma.student.findUnique({
-        where: { reg_no: updateStudentDto.reg_no }
+        where: { 
+          auction_id_reg_no: { 
+            auction_id: updateStudentDto.auction_id, 
+            reg_no: updateStudentDto.reg_no 
+          } 
+        }
       });
       if (duplicate && duplicate.id !== id) {
-        throw new ConflictException(`Student with registration number ${updateStudentDto.reg_no} already exists`);
+        throw new ConflictException(`Student with registration number ${updateStudentDto.reg_no} already exists in this auction`);
       }
     }
 

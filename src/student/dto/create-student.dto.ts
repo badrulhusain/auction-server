@@ -12,4 +12,8 @@ export class CreateStudentDto {
     @IsOptional()
     @IsBoolean()
     is_active?: boolean;
+
+    @IsOptional()
+    @IsString()
+    auction_id?: string;
 }

@@ -3,19 +3,21 @@ import { StudentService } from './student.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentEntity } from './entities/student.entity';
+import { AuctionId } from '../common/decorators/auction-id.decorator';
 
 @Controller('student')
 export class StudentController {
     constructor(private readonly studentService: StudentService) { }
 
     @Post()
-    async create(@Body() createStudentDto: CreateStudentDto) {
+    async create(@Body() createStudentDto: CreateStudentDto, @AuctionId() auctionId: string) {
+        createStudentDto.auction_id = auctionId;
         return new StudentEntity(await this.studentService.create(createStudentDto));
     }
 
     @Get()
-    async findAll() {
-        const students = await this.studentService.findAll();
+    async findAll(@AuctionId() auctionId: string) {
+        const students = await this.studentService.findAll(auctionId);
         return students.map((student) => new StudentEntity(student));
     }
 
@@ -29,7 +31,8 @@ export class StudentController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
+    async update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto, @AuctionId() auctionId: string) {
+        updateStudentDto.auction_id = auctionId;
         return new StudentEntity(await this.studentService.update(id, updateStudentDto));
     }
 

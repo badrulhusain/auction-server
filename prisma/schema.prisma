@@ -114,6 +114,7 @@ model Auction {
   creator               Admin               @relation("AuctionCreator", fields: [created_by], references: [id], onDelete: Restrict)
   teams                 Team[]
   auction_sessions      AuctionSession[]
+  students              Student[]
   team_budget_histories TeamBudgetHistory[]
   created_at            DateTime            @default(now())
   updated_at            DateTime            @updatedAt
@@ -156,10 +157,12 @@ model Team {
 /// Core entity representing a Student (Candidate) available to be auctioned
 model Student {
   id             String         @id @default(uuid())
+  auction_id     String
   name           String         @db.VarChar
-  reg_no         String         @unique @db.VarChar
+  reg_no         String         @db.VarChar
   is_active      Boolean        @default(true)
   // Relations
+  auction        Auction        @relation(fields: [auction_id], references: [id], onDelete: Restrict)
   student_groups StudentGroup[]
   auction_items  AuctionItem[]
   draft_picks    DraftPick[]
@@ -167,6 +170,8 @@ model Student {
   updated_at     DateTime       @updatedAt
   deleted_at     DateTime?
 
+  @@unique([auction_id, reg_no])
+  @@index([auction_id])
   @@map("students")
 }
 

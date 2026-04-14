@@ -2,6 +2,7 @@ import { Student } from '@prisma/client';
 
 export class StudentEntity implements Student {
     id!: string;
+    auction_id!: string;
     name!: string;
     reg_no!: string;
     is_active!: boolean;

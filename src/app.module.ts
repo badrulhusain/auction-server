@@ -10,6 +10,7 @@ import { TeamModule } from './team/team.module';
 import { GroupModule } from './group/group.module';
 import { StudentGroupModule } from './student-group/student-group.module';
 import { EmailModule } from './infrastructure/email/email.module';
+import { DraftModule } from './draft/draft.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { EmailModule } from './infrastructure/email/email.module';
     TeamModule,
     GroupModule,
     StudentGroupModule,
-    EmailModule
+    EmailModule,
+    DraftModule,
   ],
   controllers: [],
   providers: [],

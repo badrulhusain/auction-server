@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, UnprocessableEntityException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
@@ -22,8 +23,11 @@ export class TeamService {
             throw new ConflictException(`Team with username ${createTeamDto.username} already exists`);
         }
 
+        const { password_hash: rawPassword, ...rest } = createTeamDto;
+        const password_hash = await bcrypt.hash(rawPassword, 10);
+
         return this.prisma.team.create({
-            data: createTeamDto,
+            data: { ...rest, password_hash },
         });
     }
 
@@ -61,9 +65,15 @@ export class TeamService {
             }
         }
 
+        const { password_hash: rawPassword, ...rest } = updateTeamDto;
+        const data: any = { ...rest };
+        if (rawPassword) {
+            data.password_hash = await bcrypt.hash(rawPassword, 10);
+        }
+
         return this.prisma.team.update({
             where: { id },
-            data: updateTeamDto,
+            data,
         });
     }
 
@@ -72,8 +82,15 @@ export class TeamService {
         if (!existing) {
             throw new NotFoundException(`Team with ID ${id} not found`);
         }
-        return this.prisma.team.delete({
-            where: { id },
-        });
+        try {
+            return await this.prisma.team.delete({ where: { id } });
+        } catch (err: any) {
+            if (err?.code === 'P2003') {
+                throw new UnprocessableEntityException(
+                    'Cannot delete this team because it has draft history. Remove the draft data first.',
+                );
+            }
+            throw err;
+        }
     }
 }

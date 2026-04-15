@@ -54,6 +54,13 @@ export class AuctionController {
         return this.auctionService.findSessionsByAuctionId(id);
     }
 
+    @Get(':id/session/:sessionId')
+    async findSessionByAuctionAndId(
+        @Param('sessionId') sessionId: string,
+    ) {
+        return this.auctionService.findSessionById(sessionId);
+    }
+
     @Get('session/:sessionId')
     async findSession(@Param('sessionId') sessionId: string) {
         return this.auctionService.findSessionById(sessionId);

@@ -2,6 +2,7 @@ import { Group } from '@prisma/client';
 
 export class GroupEntity implements Group {
     id!: string;
+    auction_id!: string;
     key!: string;
     value!: string;
     created_at!: Date;

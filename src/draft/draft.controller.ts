@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { DraftService } from './draft.service';
-import { DraftGateway } from './draft.gateway';
+import { DraftBroadcastService } from './draft-broadcast.service';
 
 @Controller('draft')
 export class DraftController {
     constructor(
         private readonly draftService: DraftService,
-        private readonly draftGateway: DraftGateway,
+        private readonly broadcastService: DraftBroadcastService,
     ) {}
 
     @Get('sessions/:sessionId/state')
@@ -25,8 +25,8 @@ export class DraftController {
         @Body('auction_id') auctionId: string,
     ) {
         const result = await this.draftService.startDraft(sessionId, auctionId);
-        // Notify all clients watching this session that the draft has started
-        await this.draftGateway.broadcastState(sessionId);
+        const state = await this.draftService.getState(sessionId);
+        await this.broadcastService.broadcastState(sessionId, state);
         return result;
     }
 
@@ -36,11 +36,14 @@ export class DraftController {
         @Body('studentId') studentId: string,
     ) {
         const result = await this.draftService.makePick(turnId, studentId);
-        // sessionId is returned by makePick so we can broadcast without requiring it in the body
         if (result.sessionId) {
+            const [state, summary] = await Promise.all([
+                this.draftService.getState(result.sessionId),
+                this.draftService.getSummary(result.sessionId),
+            ]);
             await Promise.all([
-                this.draftGateway.broadcastState(result.sessionId),
-                this.draftGateway.broadcastSummary(result.sessionId),
+                this.broadcastService.broadcastState(result.sessionId, state),
+                this.broadcastService.broadcastSummary(result.sessionId, summary),
             ]);
         }
         return result;

@@ -1,27 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AdminLocalStrategy } from './strategies/admin-local.strategy';
-import { TeamLocalStrategy } from './strategies/team-local.strategy';
-import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
+import { SupabaseAuthService } from './supabase-auth.service';
+import { SupabaseJwtGuard } from './guards/supabase-jwt.guard';
 import { PrismaModule } from '../prisma/prisma.module';
-import { EmailModule } from '../infrastructure/email/email.module';
 
 @Module({
-    imports: [
-        PrismaModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: async (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_ACCESS_SECRET'),
-            }),
-            inject: [ConfigService],
-        }),
-        EmailModule,
-    ],
-    providers: [AuthService, AdminLocalStrategy, TeamLocalStrategy, JwtAccessStrategy],
+    imports: [PrismaModule],
+    providers: [AuthService, SupabaseAuthService, SupabaseJwtGuard],
     controllers: [AuthController],
+    exports: [SupabaseJwtGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

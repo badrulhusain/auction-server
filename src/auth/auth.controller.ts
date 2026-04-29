@@ -1,91 +1,58 @@
-import { Controller, Post, UseGuards, Request, Res, Body, Req } from '@nestjs/common';
+import { Controller, Post, UseGuards, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AdminLocalAuthGuard } from './guards/admin-local-auth.guard';
-import { TeamLocalAuthGuard } from './guards/team-local-auth.guard';
-import { Response } from 'express';
+import { SupabaseJwtGuard } from './guards/supabase-jwt.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { RegisterAdminDto, RegisterTeamDto } from './dto/register.dto';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+    constructor(private authService: AuthService) {}
 
-    @UseGuards(AdminLocalAuthGuard)
-    @Post('admin/login')
-    async adminLogin(@Request() req: any, @Res({ passthrough: true }) res: Response) {
-        // req.user is populated by passport-local from the DB
-        const tokens = await this.authService.getTokens(req.user.id, req.user.username, 'ADMIN');
+    // --- ADMIN ENDPOINTS ---
 
-        await this.authService.updateRefreshToken(req.user.id, 'ADMIN', tokens.refreshToken);
-
-        res.cookie('admin_refresh_token', tokens.refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-
-        return {
-            access_token: tokens.accessToken,
-        };
+    @Post('admin/register')
+    adminRegister(@Body() dto: RegisterAdminDto) {
+        return this.authService.registerAdmin(dto);
     }
 
-    @Post('admin/logout')
-    async adminLogout(@Body('userId') userId: string, @Res({ passthrough: true }) res: Response) {
-        // Later this will be extracted from the @CurrentUser decorator via JwtAuthGuard
-        // For now, accepting userId in body for the skeleton
-        await this.authService.logout(userId, 'ADMIN');
+    @Post('admin/login')
+    adminLogin(
+        @Body('email') email: string,
+        @Body('password') password: string,
+    ) {
+        return this.authService.loginAdmin(email, password);
+    }
 
-        res.clearCookie('admin_refresh_token');
-        return { message: 'Logged out successfully' };
+    @UseGuards(SupabaseJwtGuard)
+    @Post('admin/logout')
+    adminLogout(@CurrentUser() user: { userId: string }) {
+        return this.authService.logout(user.userId);
     }
 
     @Post('admin/forgot-password')
-    async forgotAdminPassword(@Body() dto: ForgotPasswordDto) {
+    forgotAdminPassword(@Body() dto: ForgotPasswordDto) {
         return this.authService.forgotAdminPassword(dto.email);
-    }
-
-    @Post('admin/reset-password')
-    async resetAdminPassword(@Body() dto: ResetPasswordDto) {
-        return this.authService.resetAdminPassword(dto);
     }
 
     // --- TEAM ENDPOINTS ---
 
-    @Post('admin/register')
-    async adminRegister(@Body() dto: RegisterAdminDto) {
-        return this.authService.registerAdmin(dto);
-    }
-
-    @UseGuards(TeamLocalAuthGuard)
-    @Post('team/login')
-    async teamLogin(@Request() req: any, @Res({ passthrough: true }) res: Response) {
-        const tokens = await this.authService.getTokens(req.user.id, req.user.username, 'TEAM');
-
-        await this.authService.updateRefreshToken(req.user.id, 'TEAM', tokens.refreshToken);
-
-        res.cookie('team_refresh_token', tokens.refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-
-        return {
-            access_token: tokens.accessToken,
-        };
-    }
-
-    @Post('team/logout')
-    async teamLogout(@Body('userId') userId: string, @Res({ passthrough: true }) res: Response) {
-        await this.authService.logout(userId, 'TEAM');
-
-        res.clearCookie('team_refresh_token');
-        return { message: 'Logged out successfully' };
-    }
-
     @Post('team/register')
-    async teamRegister(@Body() dto: RegisterTeamDto) {
+    teamRegister(@Body() dto: RegisterTeamDto) {
         return this.authService.registerTeam(dto);
+    }
+
+    @Post('team/login')
+    teamLogin(
+        @Body('username') username: string,
+        @Body('password') password: string,
+    ) {
+        return this.authService.loginTeam(username, password);
+    }
+
+    @UseGuards(SupabaseJwtGuard)
+    @Post('team/logout')
+    teamLogout(@CurrentUser() user: { userId: string }) {
+        return this.authService.logout(user.userId);
     }
 }

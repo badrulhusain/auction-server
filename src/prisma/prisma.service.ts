@@ -1,19 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { neonConfig } from '@neondatabase/serverless';
+import { PrismaPg } from '@prisma/adapter-pg';
 import * as dotenv from 'dotenv';
-import ws from 'ws';
 
 dotenv.config();
-
-neonConfig.webSocketConstructor = ws;
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
 
     constructor() {
-        const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
+        const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
         super({ adapter });
     }
 
